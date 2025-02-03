@@ -274,5 +274,62 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		return
+	}
 
+	// Extract the ID from the URL path
+	vars := mux.Vars(r)
+	idString, ok := vars["id"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "missing id parameter"})
+		return
+	}
+
+	// Convert the ID to an integer
+	idInt, err := strconv.Atoi(idString)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid id parameter"})
+		return
+	}
+
+	// Call the model's Delete function
+	err = categoriesmodel.Delete(idInt)
+	if err != nil {
+		if err.Error() == "category not found" {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "category not found"})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "failed to delete category"})
+		return
+	}
+
+	// Return success response with no content
+	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]string{"message": "category deleted successfully"})
+}
+
+func DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	idString := r.URL.Query().Get("id")
+	if idString == "" {
+		http.Error(w, "Missing ID parameter", http.StatusBadRequest)
+		return
+	}
+	idInt, err := strconv.Atoi(idString)
+	if err != nil {
+		http.Error(w, "Invalid ID parameter", http.StatusBadRequest)
+		return
+	}
+	err = categoriesmodel.Delete(idInt)
+	if err != nil {
+		http.Error(w, "Failed to delete category: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/categories", http.StatusSeeOther)
 }

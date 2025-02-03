@@ -36,3 +36,21 @@ func GetByID(id uint) (entities.Category, error) {
 	}
 	return category, nil
 }
+
+func Delete(id int) error {
+	var category entities.Category
+	// First, find the category by ID
+	if err := config.DB.First(&category, id).Error; err != nil {
+		// If there's another error, return it
+		return err
+	}
+
+	// Delete the category from the database
+	if err := config.DB.Delete(&category).Error; err != nil {
+		// If there's an error during deletion, return the error
+		return err
+	}
+
+	// If everything goes well, return nil (no error)
+	return nil
+}

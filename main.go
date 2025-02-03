@@ -21,21 +21,27 @@ func main() {
 	r.HandleFunc("/api/categories", categoriescontroller.Index).Methods("GET")
 	r.HandleFunc("/api/categories/add", categoriescontroller.Add).Methods("POST")
 	r.HandleFunc("/api/categories/edit/{id}", categoriescontroller.Edit).Methods("GET", "PUT", "PATCH")
-	r.HandleFunc("/api/categories/delete", categoriescontroller.Delete).Methods("DELETE")
+	r.HandleFunc("/api/categories/delete/{id}", categoriescontroller.Delete).Methods("DELETE")
 
-	//2. Category Views
+	//2. Products API
+	r.HandleFunc("/api/product", productcontroller.Index).Methods("GET")
+	r.HandleFunc("/api/product/add", productcontroller.Add).Methods("POST")
+	r.HandleFunc("/api/product/edit/{id}", productcontroller.Edit).Methods("GET", "PUT", "PATCH")
+	r.HandleFunc("/api/product/delete/{id}", productcontroller.Delete).Methods("DELETE")
+
+	//3. Category Views
 	r.HandleFunc("/categories", categoriescontroller.GetCategoriesAll).Methods("GET")
 	r.HandleFunc("/categories/add", categoriescontroller.AddNewCategories).Methods("GET")  // Menampilkan form untuk menambahkan kategori
 	r.HandleFunc("/categories/add", categoriescontroller.AddNewCategories).Methods("POST") // melakukan eksekusi untuk menambahkan kategori
 	r.HandleFunc("/categories/edit", categoriescontroller.EditNewCategories).Methods("GET", "POST")
-	r.HandleFunc("/categories/delete", categoriescontroller.Delete).Methods("DELETE")
+	r.HandleFunc("/categories/delete", categoriescontroller.DeleteCategory).Methods("DELETE", "GET")
 
-	//3. Products
-	r.HandleFunc("/api/product", productcontroller.Index).Methods("GET")
-	r.HandleFunc("/api/product/add", productcontroller.Add).Methods("POST")
-	r.HandleFunc("/api/product/update", productcontroller.Update).Methods("POST")
-	r.HandleFunc("/api/product/detail", productcontroller.Detail).Methods("GET")
-	r.HandleFunc("/api/product/delete", productcontroller.Delete).Methods("DELETE")
+	//4. Product Views
+	r.HandleFunc("/product", productcontroller.GetAllProduct).Methods("GET")
+	r.HandleFunc("/product/add", productcontroller.AddNewProduct).Methods("GET")                // Menampilkan form untuk menambahkan kategori
+	r.HandleFunc("/product/add", productcontroller.AddNewProduct).Methods("POST")               // melakukan eksekusi untuk menambahkan kategori
+	r.HandleFunc("/product/edit/{id}", productcontroller.EditNewProduct).Methods("GET", "POST") // Updated route to include ID
+	r.HandleFunc("/product/delete", productcontroller.DeleteProduct).Methods("DELETE", "GET")
 
 	log.Println("server running on port 8080")
 	http.ListenAndServe(":8080", r)
