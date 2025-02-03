@@ -29,14 +29,26 @@ func main() {
 	r.HandleFunc("/api/product/edit/{id}", productcontroller.Edit).Methods("GET", "PUT", "PATCH")
 	r.HandleFunc("/api/product/delete/{id}", productcontroller.Delete).Methods("DELETE")
 
-	//3. Category Views
+	// //3. Category API
+	// r.HandleFunc("/api/customer", categoriescontroller.Index).Methods("GET")
+	// r.HandleFunc("/api/customer/add", categoriescontroller.Add).Methods("POST")
+	// r.HandleFunc("/api/customer/edit/{id}", categoriescontroller.Edit).Methods("GET", "PUT", "PATCH")
+	// r.HandleFunc("/api/customer/delete/{id}", categoriescontroller.Delete).Methods("DELETE")
+
+	// //4. Products API
+	// r.HandleFunc("/api/transaction", productcontroller.Index).Methods("GET")
+	// r.HandleFunc("/api/transaction/add", productcontroller.Add).Methods("POST")
+	// r.HandleFunc("/api/transaction/edit/{id}", productcontroller.Edit).Methods("GET", "PUT", "PATCH")
+	// r.HandleFunc("/api/transaction/delete/{id}", productcontroller.Delete).Methods("DELETE")
+
+	//5. Category Views
 	r.HandleFunc("/categories", categoriescontroller.GetCategoriesAll).Methods("GET")
 	r.HandleFunc("/categories/add", categoriescontroller.AddNewCategories).Methods("GET")  // Menampilkan form untuk menambahkan kategori
 	r.HandleFunc("/categories/add", categoriescontroller.AddNewCategories).Methods("POST") // melakukan eksekusi untuk menambahkan kategori
 	r.HandleFunc("/categories/edit", categoriescontroller.EditNewCategories).Methods("GET", "POST")
 	r.HandleFunc("/categories/delete", categoriescontroller.DeleteCategory).Methods("DELETE", "GET")
 
-	//4. Product Views
+	//6. Product Views
 	r.HandleFunc("/product", productcontroller.GetAllProduct).Methods("GET")
 	r.HandleFunc("/product/add", productcontroller.AddNewProduct).Methods("GET")                // Menampilkan form untuk menambahkan kategori
 	r.HandleFunc("/product/add", productcontroller.AddNewProduct).Methods("POST")               // melakukan eksekusi untuk menambahkan kategori
