@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"warehouse-management/config"
 	categoriescontroller "warehouse-management/controller/categoriesController"
+	customercontoller "warehouse-management/controller/customerContoller"
 	homecontroller "warehouse-management/controller/homeController"
 	productcontroller "warehouse-management/controller/productController"
+	transactioncontroller "warehouse-management/controller/transactionController"
 
 	"github.com/gorilla/mux"
 )
@@ -29,11 +31,17 @@ func main() {
 	r.HandleFunc("/api/product/edit/{id}", productcontroller.Edit).Methods("GET", "PUT", "PATCH")
 	r.HandleFunc("/api/product/delete/{id}", productcontroller.Delete).Methods("DELETE")
 
-	// //3. Category API
-	// r.HandleFunc("/api/customer", categoriescontroller.Index).Methods("GET")
-	// r.HandleFunc("/api/customer/add", categoriescontroller.Add).Methods("POST")
-	// r.HandleFunc("/api/customer/edit/{id}", categoriescontroller.Edit).Methods("GET", "PUT", "PATCH")
-	// r.HandleFunc("/api/customer/delete/{id}", categoriescontroller.Delete).Methods("DELETE")
+	//3. Category API
+	r.HandleFunc("/api/customer", customercontoller.Index).Methods("GET")
+	r.HandleFunc("/api/customer/add", customercontoller.Add).Methods("POST")
+	r.HandleFunc("/api/customer/edit/{id}", customercontoller.Edit).Methods("GET", "PUT", "PATCH")
+	r.HandleFunc("/api/customer/delete/{id}", customercontoller.Delete).Methods("DELETE")
+
+	//4. Transaction API
+	r.HandleFunc("/api/transaction", transactioncontroller.Index).Methods("GET")
+	r.HandleFunc("/api/transaction/add", transactioncontroller.Add).Methods("POST")
+	r.HandleFunc("/api/transaction/edit/{id}", customercontoller.Edit).Methods("GET", "PUT", "PATCH")
+	r.HandleFunc("/api/transaction/delete/{id}", customercontoller.Delete).Methods("DELETE")
 
 	// //4. Products API
 	// r.HandleFunc("/api/transaction", productcontroller.Index).Methods("GET")
