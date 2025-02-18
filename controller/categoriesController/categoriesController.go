@@ -16,7 +16,9 @@ import (
 func Index(w http.ResponseWriter, r *http.Request) {
 	categories, err := categoriesmodel.GetAll()
 	if err != nil {
-		http.Error(w, "Invalid get categories data"+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to get categories"))
+		return
 	}
 	// Mengatur header content type sebagai JSON
 	w.Header().Set("Content-Type", "application/json")
@@ -25,15 +27,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		"categories": categories,
 	})
 	if err != nil {
-		http.Error(w, "Failed to encode categories data", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Invalid make a json response"))
+		return
 	}
-
 }
 
 func GetCategoriesAll(w http.ResponseWriter, r *http.Request) {
 	categories, err := categoriesmodel.GetAll()
 	if err != nil {
-		http.Error(w, "Invalid get categories data"+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to get all categories"))
 		return
 	}
 	tmpl, err := template.ParseFiles("views/category/index.html")
@@ -52,13 +56,15 @@ func GetCategoriesAll(w http.ResponseWriter, r *http.Request) {
 func Add(w http.ResponseWriter, r *http.Request) {
 	// Hanya izinkan metode POST
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("MethodNotAllowed"))
 		return
 	}
 
 	// Periksa jika body kosong
 	if r.Body == nil {
-		http.Error(w, "Request body cannot be empty", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Body cannot be empty"))
 		return
 	}
 
@@ -66,20 +72,23 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	var category entities.Category
 	err := json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Invalid request body"))
 		return
 	}
 
 	// Validasi input (misal nama kategori wajib diisi)
 	if category.Name == "" {
-		http.Error(w, "Category name is required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Category name is empty"))
 		return
 	}
 
 	// Panggil fungsi model untuk menyimpan kategori baru
 	err = categoriesmodel.Create(&category)
 	if err != nil {
-		http.Error(w, "Failed to create category: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to create category"))
 		return
 	}
 
@@ -95,7 +104,9 @@ func AddNewCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		temp, err := template.ParseFiles("views/category/create.html")
 		if err != nil {
-			http.Error(w, "Failed To parse File"+err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Category name is empty"))
+			return
 		}
 		temp.Execute(w, nil)
 	}
@@ -154,9 +165,16 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		excitingCategory, err := categoriesmodel.GetByID(uint(categoryID))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Category Not Found"))
+			return
+		}
+
 		// Update kategori di database
-		updatedCategory.ID = uint(categoryID) // Convert ke uint setelah parse uint64
-		err := categoriesmodel.Update(&updatedCategory)
+		updatedCategory.ID = excitingCategory.ID // Convert ke uint setelah parse uint64
+		err = categoriesmodel.Update(&updatedCategory)
 		if err != nil {
 			http.Error(w, "Failed to update category", http.StatusInternalServerError)
 			return
@@ -175,7 +193,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		temp, err := template.ParseFiles("views/category/edit.html")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse template"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to parse template"))
 			return
 		}
 
@@ -183,7 +201,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		idString := r.URL.Query().Get("id")
 		if idString == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "missing id parameter"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Missing id parameter"))
 			return
 		}
 
@@ -191,7 +209,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		idInt, err := strconv.Atoi(idString)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "invalid id parameter"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Invalid id parameter"))
 			return
 		}
 
@@ -200,7 +218,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		err = config.DB.First(category, idInt).Error
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "category not found"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Category not found"))
 			return
 		}
 
@@ -213,7 +231,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		err = temp.Execute(w, data)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "failed to execute template"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to execute template"))
 			return
 		}
 		return
@@ -225,7 +243,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse form data"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Failed to parse form data"))
 			return
 		}
 
@@ -233,7 +251,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		idString := r.FormValue("id")
 		if idString == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "missing id parameter"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Missing id parameter"))
 			return
 		}
 
@@ -241,7 +259,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		idInt, err := strconv.Atoi(idString)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "invalid id parameter"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Invalid id parameter"))
 			return
 		}
 
@@ -250,7 +268,7 @@ func EditNewCategories(w http.ResponseWriter, r *http.Request) {
 		err = config.DB.First(category, idInt).Error
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "category not found"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Category not found"))
 			return
 		}
 
@@ -302,7 +320,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err.Error() == "category not found" {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "category not found"})
+			json.NewEncoder(w).Encode(entities.NewErrorResponse("Category not found"))
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)

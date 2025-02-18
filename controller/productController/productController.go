@@ -257,9 +257,16 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Periksa apakah produk ada sebelum memperbarui
+		existingProduct, err := productmodel.GetByID(uint(productID))
+		if err != nil {
+			http.Error(w, "Product not found", http.StatusNotFound)
+			return
+		}
+
 		// Update kategori di database
-		updateProduct.ID = uint(productID) // Convert ke uint setelah parse uint64
-		err := productmodel.Update(&updateProduct)
+		updateProduct.ID = existingProduct.ID // Convert ke uint setelah parse uint64
+		err = productmodel.Update(&updateProduct)
 		if err != nil {
 			http.Error(w, "Failed to update category", http.StatusInternalServerError)
 			return
